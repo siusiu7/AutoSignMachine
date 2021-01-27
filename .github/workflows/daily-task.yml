@@ -8,7 +8,10 @@ on:
   workflow_dispatch: # 手动触发
   schedule:
     - cron: '*/30 20-23,0-15 * * *'
-    
+  watch:
+    types: started
+  repository_dispatch:
+    types: unic
 
 jobs:
   daily-task:
