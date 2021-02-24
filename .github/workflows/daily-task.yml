@@ -1,10 +1,8 @@
 name: daily-task
 
-
 on:
-  
-  #push: # push触发
-    #branches: [ main ]
+  push: # push触发
+    branches: [ main ]
   workflow_dispatch: # 手动触发
   schedule:
     - cron: '0 0,8,16 * * *'
@@ -16,8 +14,6 @@ on:
 jobs:
   daily-task:
     if: github.event.repository.owner.id == github.event.sender.id
-
-    
     runs-on: ubuntu-latest
 
     strategy:
@@ -44,9 +40,27 @@ jobs:
     # 安装依赖
     - name: Install dependencies
       run: npm install
-       
+      
+    - name: Set date time
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%M')"
     
-    # 运行 unicom 签到任务
+    - name: Set cache time
+      id: cdate
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+    
+    - name: restore task cache
+      uses: actions/cache@v2
+      id: use-task-cache
+      with:
+        path: |
+          /home/runner/.AutoSignMachine
+        key: ${{ runner.os }}-task-${{ steps.date.outputs.date }}
+        restore-keys: |
+          ${{ runner.os }}-task-${{ steps.cdate.outputs.date }}
+          ${{ runner.os }}-
+          
+    # 运行
     - name: Run unicom daily task
       env:
         user: ${{ secrets.unicom_user }}
