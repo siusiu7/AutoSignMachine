@@ -66,8 +66,7 @@ jobs:
 
     - name: Install dependencies
       if: steps.use-npm-cache.outputs.cache-hit != 'true' || steps.use-npm-depends.outputs.cache-hit != 'true'
-      run: npm install && npm audit fix && npm audit
-
+      run: npm install
 
           
     # 运行
