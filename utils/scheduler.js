@@ -232,28 +232,114 @@ function createScheduler() {
         await scheduler.genFileName(command);
         await scheduler.initTasksQueue();
       }
-    },
-    //状态码 0x1 tryrun模式 0x2 队列模式
-    // eslint-disable-next-line no-unused-vars
-    getTaskStatus: (command) => {
-      if (scheduler.isTryRun) return 0x1;
-      return 0x2;
-    },
-    execTask: async (command, selectedTasks) => {
-      console.log("🤨 开始执行任务");
-      if (process.env.GITHUB_ACTIONS) {
-        return;
-      }
-      await scheduler.fetchTasks(command);
-      if (Object.prototype.toString.call(selectedTasks) == "[object String]") {
-        selectedTasks = selectedTasks.split(",").filter((q) => q);
-      } else {
-        selectedTasks = [];
-      }
-      if (selectedTasks.length) {
-        console.log("👉 将只执行选择的任务", selectedTasks.join(","));
-      }
-      let { taskJson, queues, will_queues } = scheduler;
+    }
+    scheduler.taskJson = taskJson;
+    scheduler.queues = queues;
+    scheduler.will_queues = will_queues;
+    return {
+      taskJson,
+      queues,
+      will_queues,
+    };
+  },
+  regTask: async (taskName, callback, options) => {
+    tasks[taskName] = {
+      callback,
+      options,
+    };
+  },
+  hasWillTask: async (command, params) => {
+    const { taskKey, tryrun } = params;
+    await scheduler.clean();
+    scheduler.isTryRun = tryrun;
+    scheduler.taskKey = taskKey || "default";
+    console.log(
+      "将使用",
+      scheduler.taskKey.replaceWithMask(2, 3),
+      "作为账户识别码"
+    );
+    console.log("🤨 计算可执行任务...");
+    if (scheduler.isTryRun) {
+      console.log("👉 当前运行在TryRun模式，仅建议在测试时运行!");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return 1;
+      // return 1;
+    } else {
+      await scheduler.genFileName(command);
+      await scheduler.initTasksQueue();
+      let { will_queues } = await scheduler.loadTasksQueue();
+      scheduler.isRunning = true;
+      return will_queues.length;
+    }
+  },
+  //生成任务队列文件并且初始化队列数据
+  fetchTasks: async (command) => {
+    if (!scheduler.isRunning && !scheduler.isTryRun) {
+      await scheduler.genFileName(command);
+      await scheduler.initTasksQueue();
+    }
+  },
+  //状态码 0x1 tryrun模式 0x2 队列模式
+  // eslint-disable-next-line no-unused-vars
+  getTaskStatus: (command) => {
+    if (scheduler.isTryRun) return 0x1;
+    return 0x2;
+  },
+  execTask: async (command, selectedTasks) => {
+    console.log("🤨 开始执行任务");
+    await scheduler.fetchTasks(command);
+    if (Object.prototype.toString.call(selectedTasks) == "[object String]") {
+      selectedTasks = selectedTasks.split(",").filter((q) => q);
+    } else {
+      selectedTasks = [];
+    }
+    if (selectedTasks.length) {
+      console.log("👉 将只执行选择的任务", selectedTasks.join(","));
+    }
+    let { taskJson, queues, will_queues } = scheduler;
+
+    let will_tasks = will_queues.filter(
+      (task) =>
+        task.taskName in tasks &&
+        (!selectedTasks.length ||
+          (selectedTasks.length && selectedTasks.indexOf(task.taskName) !== -1))
+    );
+
+    switch (scheduler.getTaskStatus()) {
+      case 1: {
+        console.log(`👇 获取总任务数: ${selectedTasks.length}`);
+        let currentTasks = [];
+        selectedTasks.forEach((v) => {
+          if (
+            tasks[v] !== undefined &&
+            Object.prototype.toString.call(tasks[v]) == "[object Object]"
+          ) {
+            currentTasks.push({ taskName: v, task: tasks[v] });
+          }
+        });
+        let { init_funcs_result } = await scheduler.pushTaskQueue(
+          command,
+          currentTasks
+        );
+        console.log("tryrun 任务模式启动");
+        if (!currentTasks.length) return console.log("无任务");
+        let queue = new PQueue({ concurrency: 2 });
+        console.log("👉 调度任务中", "并发数", 2);
+        for (let task of currentTasks) {
+          queue.add(async () => {
+            try {
+              let ttt = tasks[task.taskName];
+              if (
+                Object.prototype.toString.call(ttt.callback) ===
+                "[object AsyncFunction]"
+              ) {
+                await ttt.callback.apply(
+                  this,
+                  Object.values(init_funcs_result[task.taskName + "_init"])
+                );
+              } else {
+                console.log("❌ 任务执行内容空");
+              }
 
       let will_tasks = will_queues.filter(
         (task) =>

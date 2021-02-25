@@ -178,7 +178,6 @@ class UnicomComponent {
   // async do(title) {
   //   return await this.task[title].call(this, this.axios, this.options);
   // }
-
   async getinfo(
     data = { url, body, method: "POST", headers: { referer: "", options: "" } },
     callback = null
