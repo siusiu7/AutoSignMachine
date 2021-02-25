@@ -42,10 +42,10 @@
  *
  *
  */
-//const { createScheduler } = require("../../../utils/scheduler");
+const { scheduler } = require("../../../utils/scheduler");
 
 var start = async (params) => {
-  const { cookies, options, scheduler } = params;
+  const { cookies, options } = params;
 
   let init = async (request, savedCookies) => {
     await require("./init")(request, {
@@ -203,9 +203,9 @@ var start = async (params) => {
     },
     taskOption
   );
-
-  ///666积分补全。。。。
-  await scheduler.regTask(
+  
+ ///666积分补全。。。。
+    await scheduler.regTask(
     "jflotteryad",
     async (request) => {
       await require("./jflotteryad.js").doTask(request, options);
@@ -375,7 +375,6 @@ var start = async (params) => {
       ignoreRelay: true,
     }
   );
-
   // 首页-牛气-转盘抽奖
   await scheduler.regTask(
     "NiujieTask",
@@ -384,7 +383,6 @@ var start = async (params) => {
     },
     taskOption
   );
-
   // 首页-牛气-场馆领牛气
   await scheduler.regTask(
     "NiujieReceiveCalf",
