@@ -1,4 +1,4 @@
-name: daily-task
+name: 3-daily-task
 
 on:
   #push: # push触发
