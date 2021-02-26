@@ -1,4 +1,4 @@
-name: 3-daily-task
+name: 4-daily-task
 
 on:
   #push: # push触发
@@ -71,7 +71,7 @@ jobs:
           
     - name: Run daily task
       env:
-        user: ${{ secrets.unicom_user3 }}
-        password: ${{ secrets.unicom_password3 }}
-        appid: ${{ secrets.unicom_appid3 }}
+        user: ${{ secrets.unicom_user4 }}
+        password: ${{ secrets.unicom_password4 }}
+        appid: ${{ secrets.unicom_appid4 }}
       run: node index.js unicom --user=${user} --password=${password} --appid=${appid}  --tryrun --tasks dailysignin,winterTwo,dxIntegralEveryDay,dailygamebox,dailylotteryintegral,dailycomment,dailywoTree,dailyBookRead,dailyBookLuckdraw,dailyLiuLan,dailyVideoFreeGoods,dailyGrabdollPage,jflottery,jflotteryad,dailyYYY,dailyVideoScratchcard,dailyLKMH,dailyYYQ,bcow,dailyVideo,dailylottery,gameYearBox,producGameSignin,dailygameflow,todayDailyTask,dailygameIntegral,dailyCourse,ingots,threeSquirrels,freeDownFloorAd,dailyBaWangcard,book5video,dailyFingerqd,dailyFingerqd2,taocan,dailyTurncards
