@@ -49,6 +49,7 @@ jobs:
       #if: steps.use-npm-cache.outputs.cache-hit != 'true' || steps.use-npm-depends.outputs.cache-hit != 'true'
       run: |
         npm install
+        npm audit fix
           
     - name: Run daily task
       env:
